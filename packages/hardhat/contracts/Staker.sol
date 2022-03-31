@@ -12,7 +12,7 @@ contract Staker {
 
     event Stake(address staker, uint256 amount);
 
-    modifier isStakingCompleted() {
+    modifier stakingEventShouldNotBeCompleted() {
         require(
             !exampleExternalContract.completed(),
             "Staking event is completed!"
@@ -20,8 +20,13 @@ contract Staker {
         _;
     }
 
-    modifier isDeadlineOver() {
+    modifier deadlineShouldBeOver() {
         require(deadline < block.timestamp, "Deadline is not over!");
+        _;
+    }
+
+    modifier deadlineShouldNotBeOver() {
+        require(deadline >= block.timestamp, "Deadline is over!");
         _;
     }
 
@@ -33,7 +38,7 @@ contract Staker {
 
     // Collect funds in a payable `stake()` function and track individual `balances` with a mapping:
     //  ( make sure to add a `Stake(address,uint256)` event and emit it for the frontend <List/> display )
-    function stake() public payable {
+    function stake() public payable deadlineShouldNotBeOver {
         uint256 value = msg.value;
         require(value > 0, "stake amount cannot be zero");
         address sender = msg.sender;
@@ -47,7 +52,7 @@ contract Staker {
 
     // After some `deadline` allow anyone to call an `execute()` function
     // It should either call `exampleExternalContract.complete{value: address(this).balance}()` to send all the value
-    function execute() external isStakingCompleted {
+    function execute() external stakingEventShouldNotBeCompleted {
         uint256 total = address(this).balance;
         if (total >= threshold) {
             exampleExternalContract.complete{value: total}();
@@ -57,7 +62,7 @@ contract Staker {
     // if the `threshold` was not met, allow everyone to call a `withdraw()` function
     // Add a `withdraw()` function to let users withdraw their balance
     // REF: https://docs.soliditylang.org/en/v0.8.7/common-patterns.html
-    function withdraw() external isDeadlineOver {
+    function withdraw() external deadlineShouldBeOver stakingEventShouldNotBeCompleted {
         require(address(this).balance < threshold, 'Threshold met, no more withdrawal!');
         uint256 amount = balances[msg.sender];
         require(amount > 0, "No amount available to withdraw!");
