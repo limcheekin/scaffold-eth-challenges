@@ -10,31 +10,29 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   // You might need the previously deployed yourToken:
   const yourToken = await ethers.getContract("YourToken", deployer);
 
-  // Todo: deploy the vendor
-  // await deploy("Vendor", {
-  //   from: deployer,
-  //   args: [yourToken.address], // Learn more about args here: https://www.npmjs.com/package/hardhat-deploy#deploymentsdeploy
-  //   log: true,
-  // });
-  //
-  // const vendor = await ethers.getContract("Vendor", deployer);
+  // deploy the vendor
+  await deploy("Vendor", {
+    from: deployer,
+    args: [yourToken.address], // Learn more about args here: https://www.npmjs.com/package/hardhat-deploy#deploymentsdeploy
+    log: true,
+  });
 
-  // Todo: transfer the tokens to the vendor
-  // console.log("\n 🏵  Sending all 1000 tokens to the vendor...\n");
-  //
-  // const transferTransaction = await yourToken.transfer(
-  //   vendor.address,
-  //   ethers.utils.parseEther("1000")
-  // );
+  const vendor = await ethers.getContract("Vendor", deployer);
 
-  //console.log("\n    ✅ confirming...\n");
-  //await sleep(5000); // wait 5 seconds for transaction to propagate
+  console.log("\n 🏵  Sending all 1000 tokens to the vendor...\n");
+  
+  const transferTransaction = await yourToken.transfer(
+     vendor.address,
+     ethers.utils.parseEther("1000")
+  );
 
-  // ToDo: change address to your frontend address vvvv
-  // console.log("\n 🤹  Sending ownership to frontend address...\n")
-  // const ownershipTransaction = await vendor.transferOwnership("** YOUR FRONTEND ADDRESS **");
-  // console.log("\n    ✅ confirming...\n");
-  // const ownershipResult = await ownershipTransaction.wait();
+  console.log("\n    ✅ confirming...\n");
+  await sleep(5000); // wait 5 seconds for transaction to propagate
+
+  console.log("\n 🤹  Sending ownership to frontend address...\n")
+  const ownershipTransaction = await vendor.transferOwnership("0x5A8D2EDdA878EC21aA4a06E18e4320c036182c4f");
+  console.log("\n    ✅ confirming...\n");
+  const ownershipResult = await ownershipTransaction.wait();
 
   // ToDo: Verify your contract with Etherscan for public chains
   // if (chainId !== "31337") {
