@@ -53,7 +53,8 @@ contract Vendor is Ownable {
             amount
         );
         require(isTransferred, "Transfer of tokens failed!");
-        payable(msg.sender).transfer(amountOfETH);
+        (bool completed, ) = payable(msg.sender).call{value: amountOfETH}("");
+        require(completed, "Transfer of ETH failed!");
         emit SellTokens(msg.sender, amountOfETH, amount);
     }
 
