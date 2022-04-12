@@ -27,29 +27,32 @@ contract Vendor is Ownable {
             payable(msg.sender),
             amountOfTokens
         );
-        require (isTransferred, "Transfer of tokens failed!");
+        require(isTransferred, "Transfer of tokens failed!");
         emit BuyTokens(msg.sender, amountOfETH, amountOfTokens);
-        
     }
 
     // lets the owner withdraw ETH
     function withdraw() external onlyOwner {
         uint256 balance = address(this).balance;
         require(balance > 0, "Balance is zero!");
-        payable(msg.sender).transfer(balance);
+        (bool completed, ) = payable(msg.sender).call{value: balance}("");
+        require(completed, "Withdrawal of ETH failed!");
     }
 
     function sellTokens(uint256 amount) external {
         uint256 balanceOf = yourToken.balanceOf(msg.sender);
         require(balanceOf > 0, "Balance is zero!");
-        require(balanceOf >= amount, "Amount must be less than or equals to balance!");
+        require(
+            balanceOf >= amount,
+            "Amount must be less than or equals to balance!"
+        );
         uint256 amountOfETH = amount / tokensPerEth;
         bool isTransferred = yourToken.transferFrom(
             msg.sender,
             address(this),
             amount
         );
-        require (isTransferred, "Transfer of tokens failed!");
+        require(isTransferred, "Transfer of tokens failed!");
         payable(msg.sender).transfer(amountOfETH);
         emit SellTokens(msg.sender, amountOfETH, amount);
     }
