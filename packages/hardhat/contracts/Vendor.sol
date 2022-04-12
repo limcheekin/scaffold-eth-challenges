@@ -27,9 +27,9 @@ contract Vendor is Ownable {
             payable(msg.sender),
             amountOfTokens
         );
-        if (isTransferred) {
-            emit BuyTokens(msg.sender, amountOfETH, amountOfTokens);
-        }
+        require (isTransferred, "Transfer of tokens failed!");
+        emit BuyTokens(msg.sender, amountOfETH, amountOfTokens);
+        
     }
 
     // lets the owner withdraw ETH
@@ -49,10 +49,9 @@ contract Vendor is Ownable {
             address(this),
             amount
         );
-        if (isTransferred) {
-            payable(msg.sender).transfer(amountOfETH);
-            emit SellTokens(msg.sender, amountOfETH, amount);
-        }
+        require (isTransferred, "Transfer of tokens failed!");
+        payable(msg.sender).transfer(amountOfETH);
+        emit SellTokens(msg.sender, amountOfETH, amount);
     }
 
     receive() external payable {
