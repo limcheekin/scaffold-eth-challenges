@@ -68,7 +68,8 @@ contract DEX {
         console.log("address(this).balance:", address(this).balance);
         console.log("token_reserve:", token_reserve);
         console.log("eth_bought:", eth_bought);
-        payable(msg.sender).transfer(eth_bought);
+        (bool sent, ) = payable(msg.sender).call{value: eth_bought}("");
+        require(sent, "Transfer of ETH failed!");
         require(token.transferFrom(msg.sender, address(this), tokens));
         return eth_bought;
     }
@@ -101,16 +102,41 @@ contract DEX {
     */
     function withdraw(uint256 amount) public returns (uint256, uint256) {
         uint256 token_reserve = token.balanceOf(address(this));
-        uint256 eth_amount = amount * address(this).balance / totalLiquidity;
+        uint256 eth_reserve = address(this).balance;
+        uint256 eth_amount = amount * eth_reserve / totalLiquidity;
         uint256 token_amount = amount * token_reserve / totalLiquidity;
+        console.log("eth_reserve:", eth_reserve);
         console.log("eth_amount:", eth_amount);
         console.log("token_reserve:", token_reserve);
         console.log("token_amount:", token_amount);
         console.log("totalLiquidity:", totalLiquidity);
-        liquidity[msg.sender] = liquidity[msg.sender] - eth_amount;
-        totalLiquidity = totalLiquidity - eth_amount;
-        payable(msg.sender).transfer(eth_amount);
+        liquidity[msg.sender] = liquidity[msg.sender] - amount;
+        totalLiquidity = totalLiquidity - amount;
+        (bool sent, ) = payable(msg.sender).call{value: eth_amount}("");
+        require(sent, "Transfer of ETH failed!");
         require(token.transfer(msg.sender, token_amount));
         return (eth_amount, token_amount);
     }
+
+/*
+Steve P., [2/8/22 1:05 AM]
+function withdraw(uint256 amount) public returns (uint256 eth_amount, uint256 token_amount) {
+        require(liquidity[msg.sender]>= amount, "withdraw: sender does not have enough liquidity to withdraw.");
+        uint256 ethReserve = address(this).balance;
+        uint256 tokenReserve = token.balanceOf(address(this));
+        uint256 ethWithdrawn;
+
+        ethWithdrawn = amount.mul(ethReserve)/ totalLiquidity;
+
+        uint256 tokenAmount = amount.mul(tokenReserve) / totalLiquidity;
+        liquidity[msg.sender] = liquidity[msg.sender].sub(amount);
+        totalLiquidity = totalLiquidity.sub(amount);
+        (bool sent, ) = payable(msg.sender).call{ value: ethWithdrawn }("");
+        require(sent, "withdraw(): revert in transferring eth to you!");
+        require(token.transfer(msg.sender, tokenAmount));
+        emit LiquidityRemoved(msg.sender, amount, ethWithdrawn, tokenAmount);
+        return (ethWithdrawn, tokenAmount);
+        
+    }
+*/    
 }
